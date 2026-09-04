@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DebateStatus {
+  CREATED
+  RUNNING
+  JUDGING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AgentRole {
+  DEBATER_A
+  DEBATER_B
+  JUDGE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String   @default("Guest Debater")
+  createdAt DateTime @default(now())
+  debates   Debate[]
+
+  @@map("users")
+}
+
+model Debate {
+  id           String        @id @default(uuid())
+  topic        String
+  status       DebateStatus  @default(CREATED)
+  rounds       Int           @default(3)
+  currentRound Int           @default(0)
+  style        String        @default("OXFORD")
+  difficulty   String        @default("STANDARD")
+  language     String        @default("English")
+  winner       String?
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  completedAt  DateTime?
+
+  agents       Agent[]
+  messages     DebateMessage[]
+  result       JudgeResult?
+
+  @@map("debates")
+}
+
+model Agent {
+  id           String          @id @default(uuid())
+  debateId     String
+  debate       Debate          @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  name         String
+  role         AgentRole
+  position     String          @db.Text
+  systemPrompt String          @db.Text
+  avatar       String?
+
+  messages     DebateMessage[]
+
+  @@map("agents")
+}
+
+model DebateMessage {
+  id         String   @id @default(uuid())
+  debateId   String
+  debate     Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  round      Int
+  turn       String   @default("ARGUMENT")
+  content    String   @db.Text
+  tokenCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([debateId, round])
+  @@map("debate_messages")
+}
+
+model JudgeResult {
+  id               String   @id @default(uuid())
+  debateId         String   @unique
+  debate           Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  winner           String
+  agentAScore      Int      @default(0)
+  agentBScore      Int      @default(0)
+  scores           Json
+  reasoning        String   @db.Text
+  agentAStrengths  Json     @default("[]")
+  agentBStrengths  Json     @default("[]")
+  agentAWeaknesses Json     @default("[]")
+  agentBWeaknesses Json     @default("[]")
+  keyTurningPoints Json?    @default("[]")
+  finalVerdict     String   @db.Text
+  createdAt        DateTime @default(now())
+
+  @@map("judge_results")
+}
