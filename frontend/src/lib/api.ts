@@ -20,6 +20,8 @@ export async function createDebate(data: {
   style?: string;
   difficulty?: string;
   language?: string;
+  agentAContext?: string;
+  agentBContext?: string;
 }): Promise<Debate> {
   const res = await fetch(`${API_BASE}/debates`, {
     method: 'POST',

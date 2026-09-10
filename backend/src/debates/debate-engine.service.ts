@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LlmService } from '../llm/llm.service';
 import { JudgeService } from '../judge/judge.service';
 import { SseService } from './sse.service';
-import { AgentRole, DebateStatus } from '@prisma/client';
+import { AgentRole, DebateStatus } from '../common/interfaces/debate.interface';
 import { ChatMessage } from '../llm/llm.interface';
 
 @Injectable()

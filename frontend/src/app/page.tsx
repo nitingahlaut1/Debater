@@ -14,6 +14,11 @@ import {
   ArrowRight,
   Shield,
   Languages,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  Bot,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -24,6 +29,9 @@ export default function HomePage() {
   const [style, setStyle] = useState('OXFORD');
   const [difficulty, setDifficulty] = useState('STANDARD');
   const [language, setLanguage] = useState('English');
+  const [agentAContext, setAgentAContext] = useState('');
+  const [agentBContext, setAgentBContext] = useState('');
+  const [showDirectives, setShowDirectives] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -38,13 +46,15 @@ export default function HomePage() {
     setIsCreating(true);
 
     try {
-      // 1. Create debate with chosen language
+      // 1. Create debate with chosen language and custom directives
       const debate = await createDebate({
         topic: topic.trim(),
         rounds,
         style,
         difficulty,
         language,
+        agentAContext: agentAContext.trim() || undefined,
+        agentBContext: agentBContext.trim() || undefined,
       });
 
       // 2. Start debate execution
@@ -257,6 +267,158 @@ export default function HomePage() {
                 <option value="GRANDMASTER">Grandmaster / Fallacy Hunt</option>
               </select>
             </div>
+          </div>
+
+          {/* Optional Agent A & Agent B Custom Directives Panel */}
+          <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+            isDark
+              ? 'bg-slate-950/60 border-slate-800'
+              : 'bg-slate-50/80 border-slate-200'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setShowDirectives(!showDirectives)}
+              className={`w-full p-3.5 sm:p-4 flex items-center justify-between text-left transition-colors ${
+                isDark ? 'hover:bg-slate-900/60' : 'hover:bg-slate-100/80'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div className={`p-1.5 rounded-lg border ${
+                  isDark ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-cyan-50 border-cyan-200 text-cyan-700'
+                }`}>
+                  <SlidersHorizontal className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className={`text-xs sm:text-sm font-bold block ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Customize Agent A &amp; Agent B Directives (Optional)
+                  </span>
+                  <span className={`text-[11px] font-medium block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Instruct agents with custom facts, persona nuances, sources, or specific argument angles.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {(agentAContext.trim() || agentBContext.trim()) && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Directives Active
+                  </span>
+                )}
+                {showDirectives ? (
+                  <ChevronUp className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                ) : (
+                  <ChevronDown className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                )}
+              </div>
+            </button>
+
+            {showDirectives && (
+              <div className={`p-4 sm:p-5 border-t grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 ${
+                isDark ? 'border-slate-800 bg-slate-950/90' : 'border-slate-200 bg-white'
+              }`}>
+                {/* Agent A Custom Directives */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <label className={`text-xs font-bold ${isDark ? 'text-cyan-300' : 'text-cyan-800'}`}>
+                        Agent A (Affirmative) Instructions
+                      </label>
+                    </div>
+                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+                      isDark ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                    }`}>
+                      FOR
+                    </span>
+                  </div>
+
+                  {/* Preset quick buttons for Agent A */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: '📊 Data & Empirical Studies', text: 'Emphasize verified economic data, peer-reviewed empirical studies, and quantifiable productivity gains.' },
+                      { label: '🚀 Tech & Innovation', text: 'Argue from technological accelerationism, exponential innovation curves, and competitive advantages.' },
+                      { label: '⚖️ Legal & Rights', text: 'Anchor arguments in constitutional principles, individual liberty, and institutional modernization.' },
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAgentAContext((prev) => prev ? `${prev}\n${preset.text}` : preset.text)}
+                        className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${
+                          isDark
+                            ? 'bg-slate-900 border-cyan-500/30 text-slate-300 hover:text-cyan-300 hover:border-cyan-500'
+                            : 'bg-cyan-50/60 border-cyan-200 text-cyan-800 hover:bg-cyan-100'
+                        }`}
+                      >
+                        + {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    value={agentAContext}
+                    onChange={(e) => setAgentAContext(e.target.value)}
+                    placeholder="e.g. Focus on economic growth in developing markets, cite historical industrial revolutions, and maintain an optimistic vision..."
+                    rows={3}
+                    className={`w-full rounded-xl border p-2.5 text-xs font-medium focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+
+                {/* Agent B Custom Directives */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-pulse" />
+                      <label className={`text-xs font-bold ${isDark ? 'text-rose-300' : 'text-rose-800'}`}>
+                        Agent B (Opposition) Instructions
+                      </label>
+                    </div>
+                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+                      isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      AGAINST
+                    </span>
+                  </div>
+
+                  {/* Preset quick buttons for Agent B */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: '🛡️ Ethical & Privacy Risks', text: 'Highlight ethical hazards, systemic privacy infringements, and algorithmic opacity.' },
+                      { label: '📉 Socio-Economic Disruption', text: 'Dissect labor displacement, widening inequality, and uncalculated transition costs.' },
+                      { label: '🔍 Dissect Fallacies', text: 'Ruthlessly scrutinize Agent A for false equivalences, hasty generalizations, and unsupported premises.' },
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAgentBContext((prev) => prev ? `${prev}\n${preset.text}` : preset.text)}
+                        className={`text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all ${
+                          isDark
+                            ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:text-rose-300 hover:border-rose-500'
+                            : 'bg-rose-50/60 border-rose-200 text-rose-800 hover:bg-rose-100'
+                        }`}
+                      >
+                        + {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    value={agentBContext}
+                    onChange={(e) => setAgentBContext(e.target.value)}
+                    placeholder="e.g. Challenge unverified assumptions, emphasize human accountability, and highlight the risks of unmonitored automation..."
+                    rows={3}
+                    className={`w-full rounded-xl border p-2.5 text-xs font-medium focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/30 ${
+                      isDark
+                        ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500'
+                        : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {errorMessage && (

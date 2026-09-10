@@ -3,8 +3,9 @@ export function buildDebaterBSystemPrompt(
   position: string,
   style: string = 'OXFORD',
   language: string = 'English',
+  customContext?: string,
 ): string {
-  return `You are Debate Agent B in a premier AI debate arena.
+  let prompt = `You are Debate Agent B in a premier AI debate arena.
 
 TOPIC: "${topic}"
 YOUR ASSIGNED POSITION: AGAINST (Opposition) — ${position}
@@ -20,4 +21,12 @@ CORE DIRECTIVES:
 6. In the final round, deliver a compelling closing statement detailing why the affirmative case fails and why the opposition perspective is superior.
 7. Tone: Highly articulate, intellectually sharp, analytical, yet respectful. Avoid superficial clichés.
 8. Length: Approximately 150-250 words per turn. Be punchy and high-impact.`;
+
+  if (customContext && customContext.trim()) {
+    prompt += `\n\nUSER-PROVIDED CUSTOM DIRECTIVES & STRATEGIC CONTEXT FOR AGENT B:
+"${customContext.trim()}"
+CRITICAL: You must actively incorporate these user-defined strategic directives, specific examples, talking points, and philosophical angles into your arguments throughout the debate.`;
+  }
+
+  return prompt;
 }

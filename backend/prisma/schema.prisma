@@ -3,23 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum DebateStatus {
-  CREATED
-  RUNNING
-  JUDGING
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
-enum AgentRole {
-  DEBATER_A
-  DEBATER_B
-  JUDGE
 }
 
 model User {
@@ -33,18 +18,18 @@ model User {
 }
 
 model Debate {
-  id           String        @id @default(uuid())
+  id           String          @id @default(uuid())
   topic        String
-  status       DebateStatus  @default(CREATED)
-  rounds       Int           @default(3)
-  currentRound Int           @default(0)
-  style        String        @default("OXFORD")
-  difficulty   String        @default("STANDARD")
-  language     String        @default("English")
+  status       String          @default("CREATED")
+  rounds       Int             @default(3)
+  currentRound Int             @default(0)
+  style        String          @default("OXFORD")
+  difficulty   String          @default("STANDARD")
+  language     String          @default("English")
   winner       String?
   userId       String?
-  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt    DateTime      @default(now())
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime        @default(now())
   completedAt  DateTime?
 
   agents       Agent[]
@@ -59,9 +44,9 @@ model Agent {
   debateId     String
   debate       Debate          @relation(fields: [debateId], references: [id], onDelete: Cascade)
   name         String
-  role         AgentRole
-  position     String          @db.Text
-  systemPrompt String          @db.Text
+  role         String
+  position     String
+  systemPrompt String
   avatar       String?
 
   messages     DebateMessage[]
@@ -77,7 +62,7 @@ model DebateMessage {
   agent      Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
   round      Int
   turn       String   @default("ARGUMENT")
-  content    String   @db.Text
+  content    String
   tokenCount Int      @default(0)
   createdAt  DateTime @default(now())
 
@@ -92,14 +77,14 @@ model JudgeResult {
   winner           String
   agentAScore      Int      @default(0)
   agentBScore      Int      @default(0)
-  scores           Json
-  reasoning        String   @db.Text
-  agentAStrengths  Json     @default("[]")
-  agentBStrengths  Json     @default("[]")
-  agentAWeaknesses Json     @default("[]")
-  agentBWeaknesses Json     @default("[]")
-  keyTurningPoints Json?    @default("[]")
-  finalVerdict     String   @db.Text
+  scores           String
+  reasoning        String
+  agentAStrengths  String   @default("[]")
+  agentBStrengths  String   @default("[]")
+  agentAWeaknesses String   @default("[]")
+  agentBWeaknesses String   @default("[]")
+  keyTurningPoints String?  @default("[]")
+  finalVerdict     String
   createdAt        DateTime @default(now())
 
   @@map("judge_results")

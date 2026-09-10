@@ -207,3 +207,262 @@ html.light body {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* ============================================ */
+/* ANIMATED DEBATER CHARACTER KEYFRAMES & STYLES */
+/* ============================================ */
+
+/* Idle breathing */
+@keyframes debaterIdle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(0.5deg);
+  }
+}
+
+.animate-debater-idle {
+  animation: debaterIdle 3s ease-in-out infinite;
+}
+
+/* Debater A arguing towards opponent (facing right) */
+@keyframes debaterArgueLeft {
+  0%, 100% {
+    transform: translateX(0px) translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateX(8px) translateY(-5px) rotate(2.5deg);
+  }
+  50% {
+    transform: translateX(14px) translateY(-2px) rotate(3.5deg);
+  }
+  75% {
+    transform: translateX(6px) translateY(-4px) rotate(1.5deg);
+  }
+}
+
+.animate-debater-argue-left {
+  animation: debaterArgueLeft 1.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Debater B arguing towards opponent (facing left) */
+@keyframes debaterArgueRight {
+  0%, 100% {
+    transform: translateX(0px) translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-8px) translateY(-5px) rotate(-2.5deg);
+  }
+  50% {
+    transform: translateX(-14px) translateY(-2px) rotate(-3.5deg);
+  }
+  75% {
+    transform: translateX(-6px) translateY(-4px) rotate(-1.5deg);
+  }
+}
+
+.animate-debater-argue-right {
+  animation: debaterArgueRight 1.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Arm Pointing Gestures */
+@keyframes armPointLeft {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-16deg) translateX(4px);
+  }
+  60% {
+    transform: rotate(-24deg) translateX(8px);
+  }
+  85% {
+    transform: rotate(-10deg) translateX(2px);
+  }
+}
+
+.animate-arm-point-left {
+  animation: armPointLeft 0.85s ease-in-out infinite;
+  transform-origin: 20px 45px;
+}
+
+@keyframes armPointRight {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(16deg) translateX(-4px);
+  }
+  60% {
+    transform: rotate(24deg) translateX(-8px);
+  }
+  85% {
+    transform: rotate(10deg) translateX(-2px);
+  }
+}
+
+.animate-arm-point-right {
+  animation: armPointRight 0.85s ease-in-out infinite;
+  transform-origin: 75px 45px;
+}
+
+/* Talking mouth movement */
+@keyframes mouthTalking {
+  0%, 100% {
+    transform: scaleY(0.25);
+    opacity: 0.8;
+  }
+  20% {
+    transform: scaleY(1.4);
+    opacity: 1;
+  }
+  40% {
+    transform: scaleY(0.5);
+    opacity: 0.9;
+  }
+  60% {
+    transform: scaleY(1.2);
+    opacity: 1;
+  }
+  80% {
+    transform: scaleY(0.4);
+    opacity: 0.85;
+  }
+}
+
+.animate-mouth-talk {
+  animation: mouthTalking 0.32s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Eye Blinking */
+@keyframes eyeBlink {
+  0%, 92%, 100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+.animate-eye-blink {
+  animation: eyeBlink 4s infinite ease-in-out;
+  transform-origin: center;
+}
+
+/* Thought bubble float & gear spin */
+@keyframes thoughtFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(-8px) scale(1.04);
+    opacity: 1;
+  }
+}
+
+.animate-thought-float {
+  animation: thoughtFloat 2.4s ease-in-out infinite;
+}
+
+@keyframes gearSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-gear-spin {
+  animation: gearSpin 4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes gearSpinReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-gear-spin-reverse {
+  animation: gearSpinReverse 3s linear infinite;
+  transform-origin: center;
+}
+
+/* Center Stage Clash Pulse */
+@keyframes clashPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px rgba(14, 165, 233, 0.5)) drop-shadow(0 0 20px rgba(244, 63, 94, 0.4));
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 24px rgba(14, 165, 233, 0.8)) drop-shadow(0 0 32px rgba(244, 63, 94, 0.7));
+  }
+}
+
+.animate-clash-pulse {
+  animation: clashPulse 1.8s ease-in-out infinite;
+}
+
+/* Audio equalizer bars */
+@keyframes eqBar1 {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+@keyframes eqBar2 {
+  0%, 100% { height: 16px; }
+  50% { height: 6px; }
+}
+@keyframes eqBar3 {
+  0%, 100% { height: 8px; }
+  50% { height: 22px; }
+}
+
+.animate-eq-1 { animation: eqBar1 0.4s ease-in-out infinite; }
+.animate-eq-2 { animation: eqBar2 0.35s ease-in-out infinite 0.1s; }
+.animate-eq-3 { animation: eqBar3 0.45s ease-in-out infinite 0.2s; }
+
+/* Floating emoji reaction */
+@keyframes floatReaction {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.6);
+  }
+  20% {
+    transform: translateY(-20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1);
+  }
+}
+
+.animate-float-reaction {
+  animation: floatReaction 1.8s ease-out forwards;
+}
+
+/* Sound wave ripples */
+@keyframes soundwaveRipple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-soundwave-ripple {
+  animation: soundwaveRipple 1.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+

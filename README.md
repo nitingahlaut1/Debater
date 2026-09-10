@@ -5,10 +5,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.10-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-File--Based-003B57?style=flat-square&logo=sqlite)](https://www.sqlite.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
 
 ---
 
@@ -22,10 +21,9 @@
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
   - [1. Clone Repository](#1-clone-repository)
-  - [2. Start Database (Docker)](#2-start-database-docker)
-  - [3. Configure Environment Variables](#3-configure-environment-variables)
-  - [4. Install Dependencies & Setup Database](#4-install-dependencies--setup-database)
-  - [5. Run Backend & Frontend](#5-run-backend--frontend)
+  - [2. Configure Environment Variables](#2-configure-environment-variables)
+  - [3. Install Dependencies & Initialize Database](#3-install-dependencies--initialize-database)
+  - [4. Run Backend & Frontend](#4-run-backend--frontend)
 - [Environment Variables Guide](#-environment-variables-guide)
 - [API Reference & Swagger Docs](#-api-reference--swagger-docs)
 - [Real-Time SSE Event Stream](#-real-time-sse-event-stream)
@@ -57,7 +55,7 @@ flowchart TD
     Engine[Debate Engine]
     LLMService[LLM Service\nGroq / Grok / Mock Simulation]
     Judge[AI Judge Service]
-    DB[(PostgreSQL 16\nPort 5433)]
+    DB[(SQLite File DB\nprisma/dev.db)]
 
     User -->|Configure & Start Debate| NextJS
     NextJS -->|REST API Requests| NestJS
@@ -113,8 +111,8 @@ flowchart TD
 | **Icons & FX** | [Lucide React](https://lucide.dev/) & Canvas Confetti | Modern UI icons & celebratory visual effects |
 | **Backend** | [NestJS 10](https://nestjs.com/) | Modular enterprise Node.js framework |
 | **Streaming** | Server-Sent Events (SSE) & RxJS | Real-time unidirectional streaming from server to client |
-| **Database** | [PostgreSQL 16](https://www.postgresql.org/) | Relational database executed via Docker |
-| **ORM** | [Prisma 5.10](https://www.prisma.io/) | Type-safe schema, migrations, and database client |
+| **Database** | [SQLite](https://www.sqlite.org/) (File-Based) | Zero-setup local relational database stored in `prisma/dev.db` (No Docker required) |
+| **ORM** | [Prisma 5.22](https://www.prisma.io/) | Type-safe schema, migrations, and database client |
 | **API Docs** | [Swagger / OpenAPI](https://swagger.io/) | Interactive API explorer at `/api/docs` |
 | **LLM Gateway** | OpenAI SDK & Custom Engine | Groq Cloud LPU, xAI Grok, and simulated fallback engine |
 
@@ -161,7 +159,6 @@ debater/
 │   ├── .env.local                  # Frontend environment configuration
 │   └── package.json
 │
-├── docker-compose.yml              # PostgreSQL database service (Port 5433)
 ├── package.json                    # Monorepo root scripts
 └── README.md                       # Documentation
 ```
@@ -173,8 +170,8 @@ debater/
 Before running the project, ensure you have:
 - **Node.js**: v18.x or v20.x installed ([Download Node.js](https://nodejs.org/))
 - **npm**: v9.x or higher
-- **Docker & Docker Compose**: Installed and running ([Download Docker Desktop](https://www.docker.com/products/docker-desktop/))
 - *(Optional)* **Groq API Key** or **xAI Grok API Key** (if you want live LLM inference; otherwise the built-in simulator works out-of-the-box).
+- **No Docker or database installation required!** (Uses embedded file-based SQLite stored in `prisma/dev.db`).
 
 ---
 
@@ -187,21 +184,7 @@ git clone https://github.com/your-username/ai-debate-arena.git
 cd debater
 ```
 
-### 2. Start Database (Docker)
-
-Start PostgreSQL 16 on port `5433`:
-
-```bash
-docker-compose up -d
-```
-
-Verify that the container is running:
-
-```bash
-docker ps
-```
-
-### 3. Configure Environment Variables
+### 2. Configure Environment Variables
 
 #### Backend Configuration
 Copy the example file in `backend/`:
@@ -213,7 +196,7 @@ cp backend/.env.example backend/.env
 Review or modify `backend/.env`:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgrespassword@localhost:5433/debater?schema=public"
+DATABASE_URL="file:./dev.db"
 
 # Groq Cloud Configuration (Optional)
 GROQ_API_KEY="your_groq_api_key_here"

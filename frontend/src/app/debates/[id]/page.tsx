@@ -16,6 +16,7 @@ import {
   AgentRole,
 } from '@/lib/types';
 import DebaterCard from '@/components/DebaterCard';
+import DebateDuelStage from '@/components/DebateDuelStage';
 import TranscriptFeed from '@/components/TranscriptFeed';
 import JudgeVerdict from '@/components/JudgeVerdictModal';
 import { useTheme } from '@/lib/ThemeContext';
@@ -371,8 +372,23 @@ export default function DebateArenaPage() {
       </div>
 
 
-      {/* Split Stage: Debater A (Left) vs Debater B (Right) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 items-stretch">
+      {/* Live Animated Debate Duel Stage */}
+      <DebateDuelStage
+        agentA={agentA}
+        agentB={agentB}
+        currentRound={currentRound}
+        totalRounds={debate.rounds}
+        activeSpeakerRole={activeSpeakerRole}
+        activeSpeakerName={activeSpeakerName}
+        isThinking={isThinking}
+        streamingText={streamingText}
+        status={status}
+        judgeScorecard={judgeScorecard}
+        language={debate.language || 'English'}
+      />
+
+      {/* Debater Profiles & Position Detail Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <DebaterCard
           agent={agentA}
           isActive={activeSpeakerRole === 'DEBATER_A'}

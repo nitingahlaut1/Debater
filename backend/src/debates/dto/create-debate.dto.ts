@@ -23,4 +23,12 @@ export class CreateDebateDto {
   @IsString()
   @IsOptional()
   language?: string = 'English';
+
+  @IsString()
+  @IsOptional()
+  agentAContext?: string;
+
+  @IsString()
+  @IsOptional()
+  agentBContext?: string;
 }

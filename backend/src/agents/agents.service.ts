@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AgentRole } from '@prisma/client';
+import { AgentRole } from '../common/interfaces/debate.interface';
 import { buildDebaterASystemPrompt } from './prompts/debater-a.prompt';
 import { buildDebaterBSystemPrompt } from './prompts/debater-b.prompt';
 import { buildJudgeSystemPrompt } from './prompts/judge.prompt';
@@ -30,6 +30,8 @@ export class AgentsService {
     topic: string,
     style: string = 'OXFORD',
     language: string = 'English',
+    agentAContext?: string,
+    agentBContext?: string,
   ) {
     const { positionA, positionB } = this.derivePositions(topic, language);
 
@@ -39,7 +41,7 @@ export class AgentsService {
         name: language.toLowerCase().includes('hindi') ? 'एजेंट A (पक्ष)' : 'Agent A',
         role: AgentRole.DEBATER_A,
         position: positionA,
-        systemPrompt: buildDebaterASystemPrompt(topic, positionA, style, language),
+        systemPrompt: buildDebaterASystemPrompt(topic, positionA, style, language, agentAContext),
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=debaterA&backgroundColor=0284c7',
       },
     });
@@ -50,7 +52,7 @@ export class AgentsService {
         name: language.toLowerCase().includes('hindi') ? 'एजेंट B (विपक्ष)' : 'Agent B',
         role: AgentRole.DEBATER_B,
         position: positionB,
-        systemPrompt: buildDebaterBSystemPrompt(topic, positionB, style, language),
+        systemPrompt: buildDebaterBSystemPrompt(topic, positionB, style, language, agentBContext),
         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=debaterB&backgroundColor=e11d48',
       },
     });

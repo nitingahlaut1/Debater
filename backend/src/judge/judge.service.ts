@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LlmService } from '../llm/llm.service';
-import { JudgeScorecard } from '../common/interfaces/debate.interface';
-import { AgentRole } from '@prisma/client';
+import { JudgeScorecard, AgentRole } from '../common/interfaces/debate.interface';
 
 @Injectable()
 export class JudgeService {
@@ -87,26 +86,26 @@ export class JudgeService {
         winner: scorecard.winner,
         agentAScore: scorecard.agentAScore,
         agentBScore: scorecard.agentBScore,
-        scores: scorecard.scores as any,
+        scores: JSON.stringify(scorecard.scores),
         reasoning: scorecard.reasoning,
-        agentAStrengths: scorecard.agentAStrengths,
-        agentBStrengths: scorecard.agentBStrengths,
-        agentAWeaknesses: scorecard.agentAWeaknesses,
-        agentBWeaknesses: scorecard.agentBWeaknesses,
-        keyTurningPoints: scorecard.keyTurningPoints,
+        agentAStrengths: JSON.stringify(scorecard.agentAStrengths || []),
+        agentBStrengths: JSON.stringify(scorecard.agentBStrengths || []),
+        agentAWeaknesses: JSON.stringify(scorecard.agentAWeaknesses || []),
+        agentBWeaknesses: JSON.stringify(scorecard.agentBWeaknesses || []),
+        keyTurningPoints: JSON.stringify(scorecard.keyTurningPoints || []),
         finalVerdict: scorecard.finalVerdict,
       },
       update: {
         winner: scorecard.winner,
         agentAScore: scorecard.agentAScore,
         agentBScore: scorecard.agentBScore,
-        scores: scorecard.scores as any,
+        scores: JSON.stringify(scorecard.scores),
         reasoning: scorecard.reasoning,
-        agentAStrengths: scorecard.agentAStrengths,
-        agentBStrengths: scorecard.agentBStrengths,
-        agentAWeaknesses: scorecard.agentAWeaknesses,
-        agentBWeaknesses: scorecard.agentBWeaknesses,
-        keyTurningPoints: scorecard.keyTurningPoints,
+        agentAStrengths: JSON.stringify(scorecard.agentAStrengths || []),
+        agentBStrengths: JSON.stringify(scorecard.agentBStrengths || []),
+        agentAWeaknesses: JSON.stringify(scorecard.agentAWeaknesses || []),
+        agentBWeaknesses: JSON.stringify(scorecard.agentBWeaknesses || []),
+        keyTurningPoints: JSON.stringify(scorecard.keyTurningPoints || []),
         finalVerdict: scorecard.finalVerdict,
       },
     });

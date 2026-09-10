@@ -4,7 +4,22 @@ export type DebateDifficulty = 'CASUAL' | 'STANDARD' | 'DEEP_THINKER' | 'GRANDMA
 
 export type DebateStatus = 'CREATED' | 'RUNNING' | 'JUDGING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
+export const DebateStatus = {
+  CREATED: 'CREATED' as const,
+  RUNNING: 'RUNNING' as const,
+  JUDGING: 'JUDGING' as const,
+  COMPLETED: 'COMPLETED' as const,
+  FAILED: 'FAILED' as const,
+  CANCELLED: 'CANCELLED' as const,
+};
+
 export type AgentRole = 'DEBATER_A' | 'DEBATER_B' | 'JUDGE';
+
+export const AgentRole = {
+  DEBATER_A: 'DEBATER_A' as const,
+  DEBATER_B: 'DEBATER_B' as const,
+  JUDGE: 'JUDGE' as const,
+};
 
 export interface ScoreCategory {
   logic: number; // 0-10
