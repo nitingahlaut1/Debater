@@ -85,3 +85,32 @@ export function subscribeToDebateStream(
     eventSource.close();
   };
 }
+
+export async function fetchTtsStatus(apiKey?: string): Promise<{
+  available: boolean;
+  engine: string;
+  voices: { DEBATER_A: string; DEBATER_B: string; JUDGE: string };
+}> {
+  const url = apiKey ? `${API_BASE}/tts/status?key=${encodeURIComponent(apiKey)}` : `${API_BASE}/tts/status`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch TTS status');
+  return res.json();
+}
+
+export async function synthesizeElevenLabsSpeech(data: {
+  text: string;
+  role?: string;
+  language?: string;
+  apiKey?: string;
+}): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/tts/synthesize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'ElevenLabs synthesis request failed');
+  }
+  return res.blob();
+}

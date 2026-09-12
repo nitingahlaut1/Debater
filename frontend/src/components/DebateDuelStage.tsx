@@ -328,7 +328,7 @@ export default function DebateDuelStage({
                 ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
                 : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}>
-              🗣️ Baritone Voice (1.25x Rate)
+              🗣️ Baritone Voice (1.18x Rate)
             </div>
           </div>
 
@@ -349,7 +349,7 @@ export default function DebateDuelStage({
               <div className="flex items-center gap-2">
                 <Radio className={`w-3.5 h-3.5 animate-pulse ${isAgentASpeaking ? 'text-cyan-400' : 'text-rose-400'}`} />
                 <span className="text-xs font-black uppercase tracking-wider">
-                  {isAgentASpeaking ? `${agentA.name} Speaking (Tenor • 1.25x Rate)` : `${agentB.name} Speaking (Baritone • 1.25x Rate)`}
+                  {isAgentASpeaking ? `${agentA.name} Speaking (Tenor • 1.25x Rate)` : `${agentB.name} Speaking (Baritone • 1.18x Rate)`}
                 </span>
               </div>
               <div className="flex items-center gap-2">

@@ -25,6 +25,8 @@ import {
   Mic,
   Radio,
   Play,
+  Key,
+  Check,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -39,6 +41,8 @@ export default function HomePage() {
   const [agentBContext, setAgentBContext] = useState('');
   const [showDirectives, setShowDirectives] = useState(false);
   const [liveVoiceMode, setLiveVoiceMode] = useState(true);
+  const [elevenLabsKey, setElevenLabsKey] = useState(speechSynthesizer.getApiKey());
+  const [showElevenSettings, setShowElevenSettings] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -454,32 +458,91 @@ export default function HomePage() {
                     </h3>
                     {liveVoiceMode && (
                       <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Live Spoken Mode
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> ElevenLabs / Studio Audio Active
                       </span>
                     )}
                   </div>
                   <p className={`text-xs mt-0.5 leading-relaxed font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Agents speak their arguments aloud to each other sequentially with distinct voice tones, conversational pacing, and synchronized character lip-sync.
+                    Agents speak their arguments aloud to each other sequentially with ElevenLabs AI Multilingual audio, distinct character roles, and synchronized lip-sync.
                   </p>
                 </div>
               </div>
 
-              {/* Toggle Switch */}
-              <button
-                type="button"
-                onClick={() => setLiveVoiceMode(!liveVoiceMode)}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0 flex items-center gap-2 border ${
-                  liveVoiceMode
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/25'
-                    : isDark
-                      ? 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
-                      : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
-                }`}
-              >
-                {liveVoiceMode ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                <span>{liveVoiceMode ? 'Live Voice ON' : 'Voice Muted'}</span>
-              </button>
+              {/* Controls */}
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setShowElevenSettings(!showElevenSettings)}
+                  title="Configure ElevenLabs API Key"
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                    speechSynthesizer.getApiKey()
+                      ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
+                      : isDark
+                        ? 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Key className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">ElevenLabs Key</span>
+                </button>
+
+                {/* Toggle Switch */}
+                <button
+                  type="button"
+                  onClick={() => setLiveVoiceMode(!liveVoiceMode)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0 flex items-center gap-2 border ${
+                    liveVoiceMode
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/25'
+                      : isDark
+                        ? 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                        : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+                  }`}
+                >
+                  {liveVoiceMode ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  <span>{liveVoiceMode ? 'Live Voice ON' : 'Voice Muted'}</span>
+                </button>
+              </div>
             </div>
+
+            {/* Optional ElevenLabs API Key Drawer */}
+            {showElevenSettings && (
+              <div className={`mt-3.5 pt-3.5 border-t space-y-2 text-xs ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+                <div className="flex items-center justify-between">
+                  <label className={`font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                    <Key className="w-3.5 h-3.5 text-cyan-400" /> ElevenLabs API Key (Optional)
+                  </label>
+                  <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Leave blank to use server environment key or high-fidelity studio fallback
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="password"
+                    placeholder="xi-... (Paste your ElevenLabs API Key)"
+                    value={elevenLabsKey}
+                    onChange={(e) => {
+                      setElevenLabsKey(e.target.value);
+                      speechSynthesizer.setApiKey(e.target.value);
+                    }}
+                    className={`flex-1 rounded-xl border px-3 py-2 text-xs font-mono focus:outline-none focus:border-cyan-500 ${
+                      isDark ? 'bg-slate-950 border-slate-800 text-cyan-300' : 'bg-white border-slate-200 text-cyan-900'
+                    }`}
+                  />
+                  {elevenLabsKey && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setElevenLabsKey('');
+                        speechSynthesizer.setApiKey('');
+                      }}
+                      className="px-2.5 py-2 text-xs text-rose-400 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Distinct Voice Personas Breakdown */}
             {liveVoiceMode && (
@@ -492,10 +555,10 @@ export default function HomePage() {
                 }`}>
                   <div>
                     <span className={`block font-extrabold text-[11px] ${isDark ? 'text-cyan-400' : 'text-cyan-800'}`}>
-                      Agent A • Tenor Voice
+                      Agent A • Liam (ElevenLabs Male)
                     </span>
                     <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      1.25x Speed • High Pitch (1.2x) • Sharp Visionary
+                      1.25x Speed • Energetic Tenor Visionary • Studio HD
                     </span>
                   </div>
                   <button
@@ -526,10 +589,10 @@ export default function HomePage() {
                 }`}>
                   <div>
                     <span className={`block font-extrabold text-[11px] ${isDark ? 'text-rose-400' : 'text-rose-800'}`}>
-                      Agent B • Baritone Voice
+                      Agent B • Adam (ElevenLabs Male)
                     </span>
                     <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      1.25x Speed • Deep Pitch (0.82x) • Critical Realist
+                      1.25x Speed • Deep Resonant Male Realist • Studio HD
                     </span>
                   </div>
                   <button
@@ -560,10 +623,10 @@ export default function HomePage() {
                 }`}>
                   <div>
                     <span className={`block font-extrabold text-[11px] ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
-                      AI Judge • Arbiter Voice
+                      AI Judge • Daniel (ElevenLabs Male)
                     </span>
                     <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      1.25x Speed • Solemn Cadence • Objective Judge
+                      1.25x Speed • Authoritative Male Arbiter • Studio HD
                     </span>
                   </div>
                   <button

@@ -6,6 +6,7 @@ import { AgentsModule } from './agents/agents.module';
 import { JudgeModule } from './judge/judge.module';
 import { MessagesModule } from './messages/messages.module';
 import { DebatesModule } from './debates/debates.module';
+import { TtsModule } from './tts/tts.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DebatesModule } from './debates/debates.module';
     JudgeModule,
     MessagesModule,
     DebatesModule,
+    TtsModule,
   ],
 })
 export class AppModule {}
