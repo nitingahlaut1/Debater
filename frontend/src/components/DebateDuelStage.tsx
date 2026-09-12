@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Agent, AgentRole, JudgeScorecard } from '@/lib/types';
 import AnimatedDebaterCharacter, { CharacterArchetype } from './AnimatedDebaterCharacter';
 import { useTheme } from '@/lib/ThemeContext';
@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Lightbulb,
   Radio,
-  Settings2
+  Mic,
+  SkipForward,
 } from 'lucide-react';
 import { speechSynthesizer } from '@/lib/audio';
 
@@ -38,6 +39,9 @@ interface DebateDuelStageProps {
   status: string;
   judgeScorecard: JudgeScorecard | null;
   language?: string;
+  isAudioPlaying?: boolean;
+  audioRole?: AgentRole | null;
+  audioSpokenText?: string;
 }
 
 export default function DebateDuelStage({
@@ -52,17 +56,30 @@ export default function DebateDuelStage({
   status,
   judgeScorecard,
   language = 'English',
+  isAudioPlaying = false,
+  audioRole = null,
+  audioSpokenText = '',
 }: DebateDuelStageProps) {
   const { isDark } = useTheme();
   const [archetype, setArchetype] = useState<CharacterArchetype>('scholar');
   const [reactions, setReactions] = useState<ReactionParticle[]>([]);
-  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(speechSynthesizer.isEnabled());
 
-  const isAgentASpeaking = activeSpeakerRole === 'DEBATER_A' && !isThinking;
-  const isAgentAThinking = activeSpeakerRole === 'DEBATER_A' && isThinking;
+  useEffect(() => {
+    setAudioEnabled(speechSynthesizer.isEnabled());
+    const unsub = speechSynthesizer.subscribe((playing) => {
+      setAudioEnabled(speechSynthesizer.isEnabled());
+    });
+    return () => unsub();
+  }, []);
 
-  const isAgentBSpeaking = activeSpeakerRole === 'DEBATER_B' && !isThinking;
-  const isAgentBThinking = activeSpeakerRole === 'DEBATER_B' && isThinking;
+  const effectiveSpeakerRole: AgentRole | null = (isAudioPlaying && audioRole) ? audioRole : activeSpeakerRole;
+  
+  const isAgentASpeaking = (effectiveSpeakerRole === 'DEBATER_A') && (!isThinking || (isAudioPlaying && audioRole === 'DEBATER_A'));
+  const isAgentAThinking = activeSpeakerRole === 'DEBATER_A' && isThinking && !isAudioPlaying;
+
+  const isAgentBSpeaking = (effectiveSpeakerRole === 'DEBATER_B') && (!isThinking || (isAudioPlaying && audioRole === 'DEBATER_B'));
+  const isAgentBThinking = activeSpeakerRole === 'DEBATER_B' && isThinking && !isAudioPlaying;
 
   const isJudging = status === 'JUDGING';
   const isCompleted = status === 'COMPLETED' || !!judgeScorecard;
@@ -78,6 +95,10 @@ export default function DebateDuelStage({
     setAudioEnabled(newState);
   };
 
+  const handleSkipSpeech = () => {
+    speechSynthesizer.skip();
+  };
+
   // Add audience reaction
   const triggerReaction = (emoji: string) => {
     const id = Date.now() + Math.random();
@@ -88,6 +109,8 @@ export default function DebateDuelStage({
       setReactions((prev) => prev.filter((r) => r.id !== id));
     }, 2000);
   };
+
+  const displayText = streamingText || (isAudioPlaying ? audioSpokenText : '');
 
   return (
     <div className={`relative rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-500 shadow-2xl ${
@@ -139,14 +162,22 @@ export default function DebateDuelStage({
               <span>Round {currentRound} of {totalRounds}</span>
             )}
           </span>
+
+          {/* Live Audio Indicator */}
+          {audioEnabled && (
+            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Real-Time Voice Active</span>
+            </span>
+          )}
         </div>
 
-        {/* Right: Interactive Controls (Archetype selector & Audio Toggle) */}
+        {/* Right: Interactive Controls (Voice Toggle, Skip, Archetype selector) */}
         <div className="flex items-center gap-2">
           {/* Audio TTS toggle */}
           <button
             onClick={handleToggleAudio}
-            title={audioEnabled ? 'Voice commentary enabled' : 'Enable voice commentary'}
+            title={audioEnabled ? 'Voice debate enabled (Click to mute)' : 'Click to enable live voice debate'}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
               audioEnabled
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-sm'
@@ -158,6 +189,18 @@ export default function DebateDuelStage({
             {audioEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             <span className="hidden sm:inline">{audioEnabled ? 'Voice ON' : 'Voice OFF'}</span>
           </button>
+
+          {isAudioPlaying && (
+            <button
+              onClick={handleSkipSpeech}
+              title="Skip current speech turn"
+              className={`p-1.5 rounded-xl border text-xs font-bold transition-all ${
+                isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <SkipForward className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Archetype switcher */}
           <div className="relative flex items-center">
@@ -199,7 +242,7 @@ export default function DebateDuelStage({
         <div className="grid grid-cols-12 items-center gap-2 sm:gap-4 relative min-h-[220px] sm:min-h-[270px]">
           
           {/* DEBATER A (Left Side - Affirmative) */}
-          <div className="col-span-5 flex justify-center sm:justify-start">
+          <div className="col-span-5 flex flex-col items-center sm:items-start justify-center">
             <AnimatedDebaterCharacter
               role="DEBATER_A"
               name={agentA.name}
@@ -209,8 +252,16 @@ export default function DebateDuelStage({
               isOpponentSpeaking={isAgentBSpeaking}
               isWinner={isAgentAWinner}
               archetype={archetype}
-              streamingSnippet={isAgentASpeaking ? streamingText : undefined}
+              streamingSnippet={isAgentASpeaking ? displayText : undefined}
             />
+            {/* Voice Tone Tag */}
+            <div className={`mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md border text-center ${
+              isDark
+                ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20'
+                : 'bg-cyan-50 text-cyan-800 border-cyan-200'
+            }`}>
+              🗣️ Tenor Voice (1.25x Rate)
+            </div>
           </div>
 
           {/* CENTER STAGE CLASH & LOGIC BEAM */}
@@ -259,7 +310,7 @@ export default function DebateDuelStage({
           </div>
 
           {/* DEBATER B (Right Side - Opposition) */}
-          <div className="col-span-5 flex justify-center sm:justify-end">
+          <div className="col-span-5 flex flex-col items-center sm:items-end justify-center">
             <AnimatedDebaterCharacter
               role="DEBATER_B"
               name={agentB.name}
@@ -269,14 +320,22 @@ export default function DebateDuelStage({
               isOpponentSpeaking={isAgentASpeaking}
               isWinner={isAgentBWinner}
               archetype={archetype}
-              streamingSnippet={isAgentBSpeaking ? streamingText : undefined}
+              streamingSnippet={isAgentBSpeaking ? displayText : undefined}
             />
+            {/* Voice Tone Tag */}
+            <div className={`mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md border text-center ${
+              isDark
+                ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}>
+              🗣️ Baritone Voice (1.25x Rate)
+            </div>
           </div>
 
         </div>
 
-        {/* LIVE ARGUMENT CALLOUT BANNER (When a debater is speaking or streaming) */}
-        {streamingText && (isAgentASpeaking || isAgentBSpeaking) && (
+        {/* LIVE ARGUMENT / SPEECH CALLOUT BANNER */}
+        {displayText && (isAgentASpeaking || isAgentBSpeaking) && (
           <div className={`mt-4 sm:mt-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300 animate-fadeIn ${
             isAgentASpeaking
               ? isDark
@@ -290,14 +349,21 @@ export default function DebateDuelStage({
               <div className="flex items-center gap-2">
                 <Radio className={`w-3.5 h-3.5 animate-pulse ${isAgentASpeaking ? 'text-cyan-400' : 'text-rose-400'}`} />
                 <span className="text-xs font-black uppercase tracking-wider">
-                  {isAgentASpeaking ? `${agentA.name} Speaking (Affirmative)` : `${agentB.name} Speaking (Opposition)`}
+                  {isAgentASpeaking ? `${agentA.name} Speaking (Tenor • 1.25x Rate)` : `${agentB.name} Speaking (Baritone • 1.25x Rate)`}
                 </span>
               </div>
-              <span className="text-[10px] font-bold opacity-75">Live Generation</span>
+              <div className="flex items-center gap-2">
+                {isAudioPlaying && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 animate-pulse">
+                    <Mic className="w-3 h-3" /> Voice &amp; Text Sync
+                  </span>
+                )}
+                <span className="text-[10px] font-bold opacity-75">Live Generation</span>
+              </div>
             </div>
             
             <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line line-clamp-3 sm:line-clamp-4 font-medium">
-              {streamingText}
+              {displayText}
               <span className={`streaming-cursor ${isAgentASpeaking ? 'text-cyan-400' : 'text-rose-400'}`} />
             </p>
           </div>

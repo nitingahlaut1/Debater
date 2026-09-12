@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import TopicSelector from '@/components/TopicSelector';
 import { createDebate, startDebate } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
+import { speechSynthesizer } from '@/lib/audio';
 import {
   Swords,
   Sparkles,
@@ -19,6 +20,11 @@ import {
   ChevronUp,
   Lightbulb,
   Bot,
+  Volume2,
+  VolumeX,
+  Mic,
+  Radio,
+  Play,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -32,6 +38,7 @@ export default function HomePage() {
   const [agentAContext, setAgentAContext] = useState('');
   const [agentBContext, setAgentBContext] = useState('');
   const [showDirectives, setShowDirectives] = useState(false);
+  const [liveVoiceMode, setLiveVoiceMode] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -60,8 +67,8 @@ export default function HomePage() {
       // 2. Start debate execution
       await startDebate(debate.id);
 
-      // 3. Redirect to live arena
-      router.push(`/debates/${debate.id}`);
+      // 3. Redirect to live arena with live voice mode parameter
+      router.push(`/debates/${debate.id}${liveVoiceMode ? '?liveVoice=true' : ''}`);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to initialize debate arena');
       setIsCreating(false);
@@ -416,6 +423,169 @@ export default function HomePage() {
                         : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
                     }`}
                   />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 🎙️ Live Real-Time Voice Debate Mode Card */}
+          <div className={`rounded-2xl border p-4 sm:p-5 transition-all duration-300 relative overflow-hidden ${
+            liveVoiceMode
+              ? isDark
+                ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-cyan-950/40 border-emerald-500/40 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/30'
+                : 'bg-gradient-to-r from-emerald-50/80 via-white to-sky-50/80 border-emerald-300 shadow-md shadow-emerald-500/10'
+              : isDark
+                ? 'bg-slate-950/60 border-slate-800 opacity-80'
+                : 'bg-slate-50/80 border-slate-200 opacity-80'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                  liveVoiceMode
+                    ? isDark ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                    : isDark ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-slate-200 border-slate-300 text-slate-600'
+                }`}>
+                  <Mic className={`w-5 h-5 ${liveVoiceMode ? 'animate-pulse' : ''}`} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className={`text-sm sm:text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      Live Real-Time Voice Debate
+                    </h3>
+                    {liveVoiceMode && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Live Spoken Mode
+                      </span>
+                    )}
+                  </div>
+                  <p className={`text-xs mt-0.5 leading-relaxed font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Agents speak their arguments aloud to each other sequentially with distinct voice tones, conversational pacing, and synchronized character lip-sync.
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <button
+                type="button"
+                onClick={() => setLiveVoiceMode(!liveVoiceMode)}
+                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all shrink-0 flex items-center gap-2 border ${
+                  liveVoiceMode
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/25'
+                    : isDark
+                      ? 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                      : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+                }`}
+              >
+                {liveVoiceMode ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                <span>{liveVoiceMode ? 'Live Voice ON' : 'Voice Muted'}</span>
+              </button>
+            </div>
+
+            {/* Distinct Voice Personas Breakdown */}
+            {liveVoiceMode && (
+              <div className={`mt-4 pt-3.5 border-t grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs ${
+                isDark ? 'border-slate-800/80' : 'border-slate-200'
+              }`}>
+                {/* Agent A Voice */}
+                <div className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+                  isDark ? 'bg-slate-900/60 border-cyan-500/30' : 'bg-white border-cyan-200 shadow-sm'
+                }`}>
+                  <div>
+                    <span className={`block font-extrabold text-[11px] ${isDark ? 'text-cyan-400' : 'text-cyan-800'}`}>
+                      Agent A • Tenor Voice
+                    </span>
+                    <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      1.25x Speed • High Pitch (1.2x) • Sharp Visionary
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      speechSynthesizer.toggle(true);
+                      speechSynthesizer.speak(
+                        language.includes('Hindi')
+                          ? 'नमस्ते! मैं सकारात्मक पक्ष का प्रतिनिधित्व करता हूँ।'
+                          : 'I am Agent A. I present the affirmative proposition with clear empirical logic.',
+                        'DEBATER_A',
+                        language,
+                        true
+                      );
+                    }}
+                    title="Sample Agent A Voice"
+                    className={`p-1.5 rounded-lg border transition-transform hover:scale-105 active:scale-95 ${
+                      isDark ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' : 'bg-cyan-100 border-cyan-300 text-cyan-800'
+                    }`}
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                  </button>
+                </div>
+
+                {/* Agent B Voice */}
+                <div className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+                  isDark ? 'bg-slate-900/60 border-rose-500/30' : 'bg-white border-rose-200 shadow-sm'
+                }`}>
+                  <div>
+                    <span className={`block font-extrabold text-[11px] ${isDark ? 'text-rose-400' : 'text-rose-800'}`}>
+                      Agent B • Baritone Voice
+                    </span>
+                    <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      1.25x Speed • Deep Pitch (0.82x) • Critical Realist
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      speechSynthesizer.toggle(true);
+                      speechSynthesizer.speak(
+                        language.includes('Hindi')
+                          ? 'सादर प्रणाम! मैं विपक्ष की ओर से गंभीर तार्किक विश्लेषण प्रस्तुत करता हूँ।'
+                          : 'I am Agent B. I represent the opposition to dissect all assumptions.',
+                        'DEBATER_B',
+                        language,
+                        true
+                      );
+                    }}
+                    title="Sample Agent B Voice"
+                    className={`p-1.5 rounded-lg border transition-transform hover:scale-105 active:scale-95 ${
+                      isDark ? 'bg-rose-500/20 border-rose-500/40 text-rose-300' : 'bg-rose-100 border-rose-300 text-rose-800'
+                    }`}
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                  </button>
+                </div>
+
+                {/* Judge Voice */}
+                <div className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+                  isDark ? 'bg-slate-900/60 border-amber-500/30' : 'bg-white border-amber-200 shadow-sm'
+                }`}>
+                  <div>
+                    <span className={`block font-extrabold text-[11px] ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
+                      AI Judge • Arbiter Voice
+                    </span>
+                    <span className={`text-[10px] block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      1.25x Speed • Solemn Cadence • Objective Judge
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      speechSynthesizer.toggle(true);
+                      speechSynthesizer.speak(
+                        language.includes('Hindi')
+                          ? 'मैं इस वाद-विवाद का निष्पक्ष मूल्यांकन करूँगा।'
+                          : 'I am the Judge Arbiter. I deliver impartial scoring and verdict.',
+                        'JUDGE',
+                        language,
+                        true
+                      );
+                    }}
+                    title="Sample Judge Voice"
+                    className={`p-1.5 rounded-lg border transition-transform hover:scale-105 active:scale-95 ${
+                      isDark ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-800'
+                    }`}
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                  </button>
                 </div>
               </div>
             )}

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   fetchDebate,
@@ -15,6 +15,7 @@ import {
   StreamEvent,
   AgentRole,
 } from '@/lib/types';
+import { speechSynthesizer } from '@/lib/audio';
 import DebaterCard from '@/components/DebaterCard';
 import DebateDuelStage from '@/components/DebateDuelStage';
 import TranscriptFeed from '@/components/TranscriptFeed';
@@ -29,11 +30,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 export default function DebateArenaPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const debateId = params.id as string;
   const { isDark } = useTheme();
 
@@ -51,6 +55,32 @@ export default function DebateArenaPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+
+  // Live Audio State
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioRole, setAudioRole] = useState<AgentRole | null>(null);
+  const [audioSpokenText, setAudioSpokenText] = useState<string>('');
+  const debateRef = useRef<Debate | null>(null);
+  debateRef.current = debate;
+
+  // Initialize Audio from URL param or default
+  useEffect(() => {
+    const isLiveVoice = searchParams.get('liveVoice') === 'true';
+    if (isLiveVoice) {
+      speechSynthesizer.toggle(true);
+    }
+
+    const unsubAudio = speechSynthesizer.subscribe((playing, role, text, revealedText) => {
+      setIsAudioPlaying(playing);
+      setAudioRole(role);
+      setAudioSpokenText(revealedText || text);
+    });
+
+    return () => {
+      unsubAudio();
+      speechSynthesizer.stop();
+    };
+  }, [searchParams]);
 
   // Load debate data initially
   useEffect(() => {
@@ -117,64 +147,142 @@ export default function DebateArenaPage() {
         break;
 
       case 'agent_thinking':
-        setActiveSpeakerRole(event.agentRole || null);
-        setActiveSpeakerName(event.agentName || null);
-        setIsThinking(true);
-        setStreamingText('');
-        if (event.round) setStreamingRound(event.round);
+        if (!speechSynthesizer.isEnabled() || !speechSynthesizer.isPlaying()) {
+          setActiveSpeakerRole(event.agentRole || null);
+          setActiveSpeakerName(event.agentName || null);
+          setIsThinking(true);
+          setStreamingText('');
+          if (event.round) setStreamingRound(event.round);
+        }
         break;
 
       case 'agent_chunk':
-        setIsThinking(false);
-        if (event.chunk) {
-          setStreamingText((prev) => prev + event.chunk);
+        // If Live Voice is disabled, stream raw LLM tokens immediately
+        if (!speechSynthesizer.isEnabled()) {
+          setIsThinking(false);
+          if (event.chunk) {
+            setStreamingText((prev) => prev + event.chunk);
+          }
         }
         break;
 
       case 'agent_message_complete':
-        setIsThinking(false);
-        setStreamingText('');
-        setActiveSpeakerRole(null);
-        setActiveSpeakerName(null);
         if (event.message) {
-          setMessages((prev) => {
-            const exists = prev.some((m) => m.id === event.message?.id);
-            if (exists) return prev;
-            return [...prev, event.message!];
-          });
+          if (speechSynthesizer.isEnabled()) {
+            // In Live Voice mode: Text generates progressively in real-time with the speech audio
+            speechSynthesizer.enqueue({
+              id: event.message.id,
+              text: event.message.content,
+              role: event.message.agent?.role || 'DEBATER_A',
+              language: debateRef.current?.language || 'English',
+              onStart: () => {
+                setActiveSpeakerRole(event.message?.agent?.role || 'DEBATER_A');
+                setActiveSpeakerName(event.message?.agent?.name || null);
+                if (event.message?.round) {
+                  setStreamingRound(event.message.round);
+                  setCurrentRound(event.message.round);
+                }
+                setIsThinking(false);
+                setStreamingText('');
+              },
+              onProgress: (revealed) => {
+                // Progressive text stream generating in sync with voice
+                setStreamingText(revealed);
+              },
+              onEnd: () => {
+                // Turn finishes: finalize message in transcript feed
+                setMessages((prev) => {
+                  const exists = prev.some((m) => m.id === event.message?.id);
+                  if (exists) return prev;
+                  return [...prev, event.message!];
+                });
+                setStreamingText('');
+                setActiveSpeakerRole(null);
+                setActiveSpeakerName(null);
+              },
+            });
+          } else {
+            // Live Voice disabled: instant message completion
+            setIsThinking(false);
+            setStreamingText('');
+            setActiveSpeakerRole(null);
+            setActiveSpeakerName(null);
+            setMessages((prev) => {
+              const exists = prev.some((m) => m.id === event.message?.id);
+              if (exists) return prev;
+              return [...prev, event.message!];
+            });
+          }
         }
         break;
 
       case 'judging_start':
-        setStatus('JUDGING');
-        setActiveSpeakerRole('JUDGE');
-        setIsThinking(true);
-        setStreamingText('');
+        if (!speechSynthesizer.isEnabled() || !speechSynthesizer.isPlaying()) {
+          setStatus('JUDGING');
+          setActiveSpeakerRole('JUDGE');
+          setIsThinking(true);
+          setStreamingText('');
+        }
         break;
 
       case 'judge_chunk':
-        setIsThinking(false);
-        if (event.chunk) {
-          setJudgeChunk((prev) => prev + event.chunk);
+        if (!speechSynthesizer.isEnabled()) {
+          setIsThinking(false);
+          if (event.chunk) {
+            setJudgeChunk((prev) => prev + event.chunk);
+          }
         }
         break;
 
       case 'judge_complete':
       case 'debate_complete':
-        setStatus('COMPLETED');
-        setActiveSpeakerRole(null);
-        setIsThinking(false);
-        setStreamingText('');
-        if (event.result) {
-          setJudgeScorecard(event.result);
+        const scorecardResult = event.result;
+        if (scorecardResult) {
+          if (speechSynthesizer.isEnabled()) {
+            speechSynthesizer.enqueue({
+              id: 'judge-verdict',
+              text: `Debate concluded. ${scorecardResult.finalVerdict}. ${scorecardResult.reasoning}`,
+              role: 'JUDGE',
+              language: debateRef.current?.language || 'English',
+              onStart: () => {
+                setStatus('JUDGING');
+                setActiveSpeakerRole('JUDGE');
+                setActiveSpeakerName('Judge Arbiter');
+                setIsThinking(false);
+                setStreamingText('');
+              },
+              onProgress: (revealed) => {
+                setJudgeChunk(revealed);
+                setStreamingText(revealed);
+              },
+              onEnd: () => {
+                setStatus('COMPLETED');
+                setJudgeScorecard(scorecardResult);
+                setActiveSpeakerRole(null);
+                setStreamingText('');
+                // Refetch complete debate data to synchronize
+                fetchDebate(debateId)
+                  .then((updated) => {
+                    setDebate(updated);
+                    setMessages(updated.messages || []);
+                  })
+                  .catch(() => {});
+              },
+            });
+          } else {
+            setStatus('COMPLETED');
+            setActiveSpeakerRole(null);
+            setIsThinking(false);
+            setStreamingText('');
+            setJudgeScorecard(scorecardResult);
+            fetchDebate(debateId)
+              .then((updated) => {
+                setDebate(updated);
+                setMessages(updated.messages || []);
+              })
+              .catch(() => {});
+          }
         }
-        // Refetch complete debate data to synchronize
-        fetchDebate(debateId)
-          .then((updated) => {
-            setDebate(updated);
-            setMessages(updated.messages || []);
-          })
-          .catch(() => {});
         break;
 
       case 'debate_error':
@@ -385,22 +493,25 @@ export default function DebateArenaPage() {
         status={status}
         judgeScorecard={judgeScorecard}
         language={debate.language || 'English'}
+        isAudioPlaying={isAudioPlaying}
+        audioRole={audioRole}
+        audioSpokenText={audioSpokenText}
       />
 
       {/* Debater Profiles & Position Detail Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <DebaterCard
           agent={agentA}
-          isActive={activeSpeakerRole === 'DEBATER_A'}
-          isThinking={activeSpeakerRole === 'DEBATER_A' && isThinking}
-          isSpeaking={activeSpeakerRole === 'DEBATER_A' && !isThinking}
+          isActive={(isAudioPlaying && audioRole === 'DEBATER_A') || activeSpeakerRole === 'DEBATER_A'}
+          isThinking={activeSpeakerRole === 'DEBATER_A' && isThinking && !isAudioPlaying}
+          isSpeaking={(isAudioPlaying && audioRole === 'DEBATER_A') || (activeSpeakerRole === 'DEBATER_A' && !isThinking)}
         />
 
         <DebaterCard
           agent={agentB}
-          isActive={activeSpeakerRole === 'DEBATER_B'}
-          isThinking={activeSpeakerRole === 'DEBATER_B' && isThinking}
-          isSpeaking={activeSpeakerRole === 'DEBATER_B' && !isThinking}
+          isActive={(isAudioPlaying && audioRole === 'DEBATER_B') || activeSpeakerRole === 'DEBATER_B'}
+          isThinking={activeSpeakerRole === 'DEBATER_B' && isThinking && !isAudioPlaying}
+          isSpeaking={(isAudioPlaying && audioRole === 'DEBATER_B') || (activeSpeakerRole === 'DEBATER_B' && !isThinking)}
         />
       </div>
 
